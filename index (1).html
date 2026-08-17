@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatchUp — job management and invoicing for UK trades</title>
+<meta name="description" content="PatchUp sends the quote, books the job, raises the invoice and chases it for you. Job management and invoicing built for UK trades.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #000000;
+    --paper: #ffffff;
+    --surface: #f4f4f4;
+    --mid: #6b6b6b;
+    --line: #e2e2e2;
+    --display: 'Poppins', system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --slant: -24.9deg;
+    --measure: 1120px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 24px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin: 0 0 20px;
+  }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    max-width: var(--measure); margin: 0 auto; padding: 16px 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .brand svg { display: block; }
+  .brand span {
+    font-family: var(--display); font-weight: 500; font-size: 18px;
+    letter-spacing: -0.01em;
+  }
+  .nav-links { margin-left: auto; display: flex; align-items: center; gap: 28px; }
+  .nav-links a {
+    font-family: var(--mono); font-size: 13px; text-decoration: none;
+    color: var(--mid); letter-spacing: 0.02em; white-space: nowrap;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-links a.nav-cta,
+  .nav-links a.nav-cta:hover { color: var(--paper); }
+  .nav-cta {
+    font-family: var(--mono); font-size: 13px; text-decoration: none;
+    background: var(--ink); color: var(--paper);
+    padding: 10px 18px; border-radius: 2px; letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .menu-btn {
+    display: none; background: none; border: 1px solid var(--line);
+    border-radius: 2px; padding: 9px 12px; cursor: pointer;
+    font-family: var(--mono); font-size: 12px; color: var(--ink);
+  }
+  .mobile-menu { display: none; border-top: 1px solid var(--line); background: var(--paper); }
+  .mobile-menu.open { display: block; }
+  .mobile-menu a {
+    display: block; padding: 16px 24px; text-decoration: none;
+    font-family: var(--mono); font-size: 14px; color: var(--ink);
+    border-bottom: 1px solid var(--line);
+  }
+
+  @media (max-width: 720px) {
+    .menu-btn { display: block; }
+    .nav-links a.hide-sm { display: none; }
+    .nav-links { gap: 16px; }
+    .nav-cta { font-size: 12px; padding: 9px 14px; }
+    .nav-inner { padding: 14px 20px; }
+    .brand span { font-size: 16px; }
+  }
+  @media (max-width: 400px) {
+    .nav-links a.hide-xs { display: none; }
+  }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 64px 0 0; }
+  .hero h1 {
+    font-weight: 300; letter-spacing: -0.035em; line-height: 1.02;
+    font-size: clamp(36px, 5.2vw, 64px);
+    margin: 0 0 24px; max-width: 26ch;
+  }
+  .hero h1 em { font-style: normal; font-weight: 500; }
+  .hero p.lede {
+    font-size: clamp(16.5px, 1.6vw, 19px); color: var(--mid);
+    max-width: 48ch; margin: 0 0 34px; line-height: 1.55;
+  }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .btn {
+    font-family: var(--mono); font-size: 14px; text-decoration: none;
+    padding: 15px 28px; border-radius: 2px; letter-spacing: 0.02em;
+    display: inline-block; transition: transform .15s ease;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-quiet { color: var(--ink); border: 1px solid var(--line); }
+  .btn-quiet:hover { border-color: var(--ink); }
+  .trial-note {
+    font-family: var(--mono); font-size: 12px; color: var(--mid);
+    margin: 18px 0 0; letter-spacing: 0.02em;
+  }
+
+  /* ---------- the slanted job strip (signature) ---------- */
+  .strip-zone { margin: 56px 0 0; overflow: hidden; padding: 36px 0 78px; }
+  .strip {
+    display: flex; gap: 10px; transform: skewX(var(--slant));
+    justify-content: center; min-width: max-content;
+  }
+  .seg {
+    padding: 30px 34px; border: 1px solid var(--ink);
+    display: flex; flex-direction: column; gap: 8px; min-width: 168px;
+  }
+  .seg > * { transform: skewX(calc(var(--slant) * -1)); }
+  .seg .n {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--mid);
+  }
+  .seg .t {
+    font-family: var(--display); font-weight: 300; font-size: 27px; letter-spacing: -0.02em;
+  }
+  .seg-paid {
+    border-color: transparent;
+    background-image: linear-gradient(135deg, #ffffff 0%, #b4b4b4 22%, #f2f2f2 46%, #8f8f8f 68%, #dcdcdc 88%, #a8a8a8 100%);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+  }
+  .seg-paid .n { color: #3a3a3a; }
+  .seg-paid .t { font-weight: 500; color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .strip { gap: 7px; transform: skewX(var(--slant)) scale(0.8); }
+    .seg { padding: 20px 15px; min-width: 0; }
+    .seg .t { font-size: 18px; }
+    .seg .n { font-size: 10px; }
+    .strip-zone { margin-top: 44px; padding: 26px 0 56px; }
+    .strip-caption { font-size: 11px; margin-top: 20px; }
+  }
+
+  .strip-caption {
+    font-family: var(--mono); font-size: 12px; color: var(--mid);
+    letter-spacing: 0.05em; margin: 34px 0 0; text-align: center;
+  }
+
+  /* ---------- generic section ---------- */
+  section { padding: 100px 0; }
+  .band { background: var(--surface); }
+  h2 {
+    font-weight: 300; letter-spacing: -0.03em; line-height: 1.08;
+    font-size: clamp(32px, 5vw, 56px); margin: 0 0 26px; max-width: 20ch;
+  }
+  .body-copy { max-width: 60ch; color: var(--mid); font-size: 18px; }
+  .body-copy p { margin: 0 0 20px; }
+  .body-copy strong { color: var(--ink); font-weight: 500; }
+
+  /* ---------- features ---------- */
+  .feat-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line); margin-top: 56px;
+  }
+  .feat { background: var(--paper); padding: 40px 32px; }
+  .feat .k {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+    color: var(--mid); display: block; margin-bottom: 18px;
+  }
+  .feat h3 {
+    font-weight: 400; font-size: 21px; letter-spacing: -0.015em;
+    margin: 0 0 12px; line-height: 1.25;
+  }
+  .feat p { margin: 0; color: var(--mid); font-size: 15.5px; line-height: 1.6; }
+  @media (max-width: 900px) { .feat-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .feat-grid { grid-template-columns: 1fr; } }
+
+  /* ---------- pricing ---------- */
+  .price-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 20px; margin-top: 56px; max-width: 780px;
+  }
+  .price {
+    border: 1px solid var(--line); background: var(--paper);
+    padding: 36px 28px; display: flex; flex-direction: column; position: relative;
+  }
+  .price .tag {
+    position: absolute; top: -1px; right: -1px;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    padding: 6px 10px;
+  }
+  .price.lead { border-color: var(--ink); }
+  .price .name {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--mid); margin-bottom: 22px;
+  }
+  .price .amt {
+    font-family: var(--display); font-weight: 300; font-size: 50px;
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .price .per { font-family: var(--mono); font-size: 13px; color: var(--mid); margin-top: 8px; }
+  .price .who { margin: 20px 0 26px; color: var(--mid); font-size: 15.5px; }
+  .price ul { list-style: none; padding: 0; margin: 0 0 30px; }
+  .price li {
+    font-size: 15px; padding: 9px 0; border-top: 1px solid var(--line); color: var(--mid);
+  }
+  .price .btn { margin-top: auto; text-align: center; }
+  .price .extra {
+    font-family: var(--mono); font-size: 12px; color: var(--mid);
+    margin: 0 0 22px; padding-top: 14px; border-top: 1px solid var(--line);
+    line-height: 1.5;
+  }
+  @media (max-width: 700px) { .price-grid { grid-template-columns: 1fr; max-width: 460px; } }
+
+
+  /* ---------- price calculator ---------- */
+  .price-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px; margin-top: 48px; }
+  .price-head .big {
+    font-family: var(--display); font-weight: 300; font-size: clamp(44px, 7vw, 76px);
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .price-head .plus {
+    font-family: var(--mono); font-size: 14px; color: var(--mid); letter-spacing: 0.02em;
+  }
+
+  .calc { border: 1px solid var(--ink); margin-top: 44px; }
+  .calc-top { padding: 30px 32px 26px; border-bottom: 1px solid var(--line); }
+  .calc-label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--mid); margin: 0 0 18px;
+  }
+  .sizes { display: flex; flex-wrap: wrap; gap: 8px; }
+  .size {
+    font-family: var(--mono); font-size: 14px; min-width: 46px; padding: 11px 8px;
+    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    cursor: pointer; text-align: center; border-radius: 2px;
+    transition: background .12s ease, color .12s ease, border-color .12s ease;
+  }
+  .size:hover { border-color: var(--ink); }
+  .size[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  .calc-out { padding: 32px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; }
+  .out-main .amount {
+    font-family: var(--display); font-weight: 300; font-size: clamp(46px, 8vw, 68px);
+    letter-spacing: -0.04em; line-height: 1;
+  }
+  .out-main .sub {
+    font-family: var(--mono); font-size: 12.5px; color: var(--mid);
+    margin-top: 10px; letter-spacing: 0.02em;
+  }
+  .out-each {
+    font-family: var(--mono); font-size: 12.5px; color: var(--mid); letter-spacing: 0.02em;
+  }
+  .out-each strong { color: var(--ink); font-weight: 500; font-size: 15px; }
+
+  .compare { padding: 0 32px 32px; }
+  .cmp-row { margin-bottom: 18px; }
+  .cmp-top {
+    display: flex; justify-content: space-between; gap: 16px;
+    font-family: var(--mono); font-size: 12px; margin-bottom: 7px; letter-spacing: 0.02em;
+  }
+  .cmp-top .who { color: var(--mid); }
+  .cmp-row.us .cmp-top .who, .cmp-row.us .cmp-top .val { color: var(--ink); }
+  .cmp-track { height: 8px; background: #ececec; }
+  .cmp-fill { height: 8px; background: #b9b9b9; transition: width .25s ease; }
+  .cmp-row.us .cmp-fill { background: var(--ink); }
+  .cmp-note {
+    font-family: var(--mono); font-size: 11.5px; color: var(--mid);
+    margin: 20px 0 0; line-height: 1.6; letter-spacing: 0.02em;
+  }
+  .calc-cta { padding: 0 32px 32px; }
+  @media (max-width: 620px) {
+    .calc-top, .calc-out, .compare, .calc-cta { padding-left: 20px; padding-right: 20px; }
+    .calc-out { gap: 22px; }
+    .size { min-width: 42px; font-size: 13px; padding: 10px 6px; }
+  }
+
+  .price-foot {
+    font-family: var(--mono); font-size: 12.5px; color: var(--mid);
+    margin-top: 26px; letter-spacing: 0.02em;
+  }
+
+  /* ---------- faq ---------- */
+  .faq { margin-top: 50px; max-width: 780px; }
+  details { border-top: 1px solid var(--line); }
+  details:last-of-type { border-bottom: 1px solid var(--line); }
+  summary {
+    padding: 24px 0; cursor: pointer; list-style: none;
+    font-size: 18px; font-weight: 400; letter-spacing: -0.01em;
+    display: flex; justify-content: space-between; gap: 20px; align-items: baseline;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; font-family: var(--mono); color: var(--mid); font-size: 18px; }
+  details[open] summary::after { content: '–'; }
+  details p { margin: 0 0 24px; color: var(--mid); max-width: 62ch; font-size: 16px; }
+
+  /* ---------- closer ---------- */
+  .closer { background: var(--ink); color: var(--paper); text-align: center; }
+  .closer h2 { color: var(--paper); margin: 0 auto 30px; max-width: 16ch; }
+  .closer .btn-primary { background: var(--paper); color: var(--ink); }
+  .closer .trial-note { color: rgba(255,255,255,0.62); }
+  .closer .cta-row { justify-content: center; }
+
+  /* ---------- footer ---------- */
+  footer { padding: 56px 0; border-top: 1px solid var(--line); }
+  .foot-inner { display: flex; flex-wrap: wrap; gap: 26px; align-items: center; }
+  .foot-links { margin-left: auto; display: flex; flex-wrap: wrap; gap: 24px; }
+  .foot-links a, .foot-copy {
+    font-family: var(--mono); font-size: 12.5px; color: var(--mid);
+    text-decoration: none; letter-spacing: 0.02em;
+  }
+  .foot-links a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <svg width="30" height="21" viewBox="0 0 1000 714.51" aria-hidden="true">
+        <path fill="#000000" fill-rule="evenodd" d="M512.99 349.45C503.14 351.94 490.88 350.11 480.72 350.11C459.39 350.11 438.06 350.11 416.73 350.11C408.98 350.11 401.22 350.11 393.46 350.11C390.04 350.11 385.95 350.8 383.05 348.85C382.64 344.79 386.37 339.57 387.41 335.43C390.19 324.31 389.9 312.76 384.53 302.37C381.99 297.43 378.59 292.92 374.64 289.02C344.72 259.46 293.05 274.52 272.19 306.98C267.14 314.84 264.33 325.66 264.5 334.95C264.58 339.29 266.22 344.51 265.37 348.62C262.96 350.43 260.23 350.11 257.26 350.11C252.22 350.11 247.18 350.11 242.14 350.11C221.2 350.11 200.26 350.11 179.32 350.11C173.5 350.11 167.68 350.11 161.87 350.11C158.99 350.11 156.21 350.49 154.03 348.51C154.03 345.57 155.8 342.78 156.98 340.06C159.4 334.46 161.98 328.94 164.71 323.48C172.88 307.15 180.04 290.24 187.75 273.69C198.66 250.29 209.21 226.74 219.95 203.27C238.02 163.82 257.33 124.93 274.93 85.27C281.48 70.54 288.1 55.8 295.07 41.26C302.32 26.14 308.05 13.49 323.76 5.51C333.81 0.4 344.38 0.36 355.37 0.36C365.45 0.36 375.53 0.36 385.62 0.36C428.66 0.36 471.71 0.36 514.75 0.36C553.14 0.36 591.53 0.36 629.93 0.36C639.62 0.36 649.32 0.36 659.01 0.36C662.65 0.36 667.47 -0.55 670.19 2.17C670.2 5.99 667.6 10.12 665.93 13.56C662.81 20.01 659.94 26.6 657.09 33.17C645.67 59.47 632.84 85.17 621.43 111.46C617.73 119.98 614.09 128.66 609.78 136.89C608.12 140.08 606.71 144.33 603.51 146.08C599.25 145.4 595.24 142.16 591.16 140.56C583.87 137.7 574.67 136.65 566.93 137.97C536.81 143.08 513.74 167.06 508.69 196.9C506.74 208.41 507.85 220.67 513.94 230.94C519.77 240.79 529.74 247.6 540.78 250.46C545.71 251.74 553.65 249.98 557.55 253.03C557.72 256.21 555.56 259.46 554.19 262.34C551.43 268.17 549.25 274.27 546.38 280.05C538.75 295.44 531.88 311.3 524.8 326.95C521.68 333.84 519.01 343.38 513.89 348.93C513.59 349.11 513.29 349.28 512.99 349.45ZM632.43 353.67C626.21 347.93 615.33 350.11 607.45 350.11C589.99 350.11 572.53 350.11 555.07 350.11C549.07 350.11 539.27 351.94 534 349.02C533.29 346.22 534.88 344.24 536.05 341.69C538.6 336.15 540.76 330.45 543.44 324.97C553.2 305 561.81 284.44 571.29 264.33C573.43 259.79 575.47 255.2 577.59 250.65C580.3 244.81 583.2 239.75 578.54 234.15C572.16 229.84 565.44 234.68 558.75 235.78C548.18 237.52 535.42 233.39 529.34 224.23C523.6 215.6 522.89 205.54 525.09 195.67C530.08 173.31 552.01 153.85 575.44 153.95C581.27 153.98 588.22 155.83 593 159.23C598.08 162.84 600.29 168.23 607.23 168.39C613.83 166.84 615.54 161.85 618.13 156.23C622.64 146.45 626.88 136.57 631.37 126.79C645.43 96.19 658.57 65 673.62 34.87C677.46 27.17 680.76 19.2 684.55 11.47C686.3 7.89 687.36 4.17 690.45 1.54C697.39 -0.99 706.45 0.36 713.75 0.36C729.66 0.36 745.57 0.36 761.48 0.36C815.41 0.36 869.34 0.36 923.27 0.36C937.24 0.36 951.21 0.36 965.17 0.36C976.97 0.36 988.93 0.72 996.03 11.71C1002.67 22 999.95 33.93 995.37 44.31C987.98 61.03 979.74 77.42 971.98 93.98C943.53 154.77 914.57 215.3 886 276.03C877.76 293.56 869.91 311.31 861.23 328.63C858.02 335.04 855.63 344.6 850.03 349.2C846.08 350.54 841.78 350.11 837.63 350.11C830.65 350.11 823.67 350.11 816.68 350.11C793.01 350.11 769.35 350.11 745.68 350.11C739.08 350.11 732.49 350.11 725.89 350.11C721.31 350.11 716.81 349.72 712.52 351.51C709.32 353.68 707.48 356.09 706.37 359.8C706.2 365.04 709.03 369.24 710.41 374.15C712.39 381.19 712.42 387.78 710.49 394.82C702.65 423.45 661.31 438.35 636.86 422.13C622.72 412.75 618.46 396.14 625.19 380.65C628.86 372.19 639.13 362.92 632.43 353.67ZM145.57 368.1C148.84 366.92 152.12 367.22 155.57 367.15C159.37 367.07 163.07 366.35 166.89 366.41C170.29 366.45 173.62 367.2 177.03 367.13C200.94 366.63 224.89 366.39 248.85 366.39C252.32 366.39 255.82 366.27 259.29 366.46C268.73 366.97 281.15 369.33 285.69 358.6C286.65 353.14 283.53 348.4 282.22 343.21C280.48 336.31 280.84 329.23 283.24 322.51C290.82 301.19 311.85 290.39 333.43 290.39C344.15 290.4 356 293.41 363.62 301.51C373.17 311.67 374.84 326.86 369.16 339.42C365.84 346.75 357.42 352.97 360.51 361.63C365.36 368.81 373.21 366.96 380.69 366.47C385.69 366.15 390.77 366.39 395.78 366.39C422.15 366.39 448.52 366.39 474.89 366.39C481.48 366.39 488.07 366.33 494.66 366.4C497.87 366.43 501.69 366.19 504.27 368.2C504.75 371.2 503.01 373.92 501.9 376.71C499.1 383.67 495.5 390.38 492.32 397.17C482.27 418.6 472.58 440.18 462.71 461.69C459.87 467.88 457.17 474.13 454.29 480.31C452.97 483.13 452.24 486.01 449.77 488C444.59 487.89 438.87 482.67 433.63 481.17C421.36 477.63 408.82 478.95 396.89 483.29C367.23 494.07 345.12 526.55 352.08 558.45C353.61 565.46 355.58 572.66 360.22 578.35C367.06 586.72 375.69 591.78 386.23 593.88C390.74 594.78 396.04 593.34 400.16 595.35C400.98 598.45 398.68 601.7 397.47 604.6C394.57 611.52 391.73 618.55 388.37 625.26C379.27 643.44 371 662.37 363.02 681.07C360.21 687.68 357.09 694.12 354.09 700.64C352.33 704.48 350.91 708.74 348 711.83C342.58 714.32 335.86 712.61 330.03 713.21C310.15 715.27 289.99 713.04 270.1 713.04C254.27 713.04 238.54 713.81 222.72 713.81C214.65 713.81 206.69 713 198.61 713.04C194.04 713.06 189.55 713.81 184.97 713.81C151.09 713.83 117.36 713.04 83.56 713.04C68.11 713.04 52.77 713.81 37.35 713.81C23.94 713.81 10.91 712.79 3.36 700.01C-2.21 690.59 -0.04 679.19 3.98 669.71C11.22 652.58 19.74 635.86 27.64 619.01C55.64 559.26 83.02 499.22 111.18 439.55C118.35 424.37 125.95 409.17 132.44 393.68C134.39 389.05 136.79 384.63 138.77 380.02C140.55 375.87 142.19 371.17 145.57 368.1ZM367.98 711.87C367.37 708.89 369.18 706.18 370.39 703.44C373.14 697.21 376.26 691.14 378.99 684.9C389.59 660.65 400.3 636.21 411.96 612.46C414.8 606.66 417.07 600.6 419.9 594.81C422.32 589.86 425.3 585.25 423.64 579.63C417.51 570.14 407.83 577.53 399.32 578.63C388.7 580 378.48 575.01 372.74 566.06C353.28 535.68 386.64 494.44 419.26 495.17C425.54 495.32 432.59 497.35 437.91 500.69C444.15 504.62 446.91 510.21 455.14 508.5C460.38 505.8 462.13 500.8 464.46 495.7C468.62 486.57 472.97 477.52 476.92 468.29C486.07 446.86 496.71 426.06 506.31 404.84C510.02 396.66 513.68 388.5 517.64 380.44C519.65 376.34 521.02 371.79 524.01 368.29C529.68 365.62 538.03 367.3 544.23 367.15C559.84 366.77 575.35 366.39 590.98 366.39C595.98 366.39 600.83 366.83 605.8 367.08C608.21 367.21 610.23 366.7 612.12 368.27C612.33 372.68 608.55 377.37 607.4 381.73C604.74 391.85 604.22 402.27 607.93 412.25C620.76 446.84 664.58 452.59 694.12 437.07C704.31 431.71 712.78 422.93 719.24 413.54C725.17 404.91 728.92 394.2 728.43 383.65C728.21 378.89 724.99 372.64 726.33 368.23C729.51 366.52 733.36 367.33 736.91 367.06C744.63 366.48 751.9 366.48 759.62 367.06C765.75 367.52 771.76 366.4 777.87 366.39C789.83 366.38 801.69 367.17 813.62 367.17C819.75 367.17 825.79 366.39 831.91 366.39C835.18 366.39 838.44 365.93 840.93 368.24C841.42 371.87 838.98 375.5 837.54 378.81C833.84 387.36 829.37 395.59 825.69 404.15C811.1 438.06 794.84 471.31 779.18 504.72C757.41 551.13 734.86 597.28 713.81 644.02C709.39 653.84 704.89 663.58 700.29 673.32C697.7 678.81 695.74 684.7 692.61 689.92C687.91 697.74 680.35 704.04 672.3 708.28C655.01 717.39 631.75 713.81 612.94 713.81C571.04 713.81 529.1 713.41 487.2 713.04C458.63 712.79 430.05 713.81 401.43 713.81C393.73 713.81 386.14 713.28 378.48 713.06C374.99 712.97 371.01 713.72 367.98 711.87Z"/>
+      </svg>
+      <span>PatchUp</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features" class="hide-sm">Features</a>
+      <a href="#pricing" class="hide-sm">Pricing</a>
+      <a href="#faq" class="hide-sm">FAQ</a>
+      <a href="https://app.getpatchup.co.uk" class="hide-xs">Log in</a>
+      <a href="https://app.getpatchup.co.uk/signup" class="nav-cta">Start free trial</a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mobileMenu">Menu</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#why">Why PatchUp</a>
+    <a href="#faq">FAQ</a>
+    <a href="https://app.getpatchup.co.uk">Log in</a>
+  </div>
+</nav>
+
+<main id="top">
+
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow">Job management for UK trades</p>
+      <h1>Finish the job.<br><em>We'll handle getting paid.</em></h1>
+      <p class="lede">PatchUp sends the quote, books the job, raises the invoice and chases it for you — all from your phone, between jobs.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://app.getpatchup.co.uk/signup">Start free trial</a>
+        <a class="btn btn-quiet" href="#features">See how it works</a>
+      </div>
+      <p class="trial-note">14 days free · no card needed · cancel any time</p>
+    </div>
+
+    <div class="strip-zone">
+      <div class="strip">
+        <div class="seg"><span class="n">01</span><span class="t">Quoted</span></div>
+        <div class="seg"><span class="n">02</span><span class="t">Booked</span></div>
+        <div class="seg"><span class="n">03</span><span class="t">Invoiced</span></div>
+        <div class="seg seg-paid"><span class="n">04</span><span class="t">Paid</span></div>
+      </div>
+      <p class="strip-caption">Four pieces. PatchUp handles the gaps between them.</p>
+    </div>
+  </header>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="eyebrow">The bit nobody enjoys</p>
+      <h2>The job's done. So where's the money?</h2>
+      <div class="body-copy">
+        <p>Every trade knows the feeling. You've finished the work, the customer was happy, and three weeks later you're still waiting. The invoice is somewhere in their inbox. Chasing feels awkward, so you leave it another week.</p>
+        <p>Meanwhile the quote you sent on Tuesday hasn't had a reply, next week's diary is three texts and a note on the dashboard, and Sunday night disappears into paperwork.</p>
+        <p><strong>PatchUp does all of it in the background, so you don't have to think about it.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow">What it does</p>
+      <h2>Everything between the enquiry and the payment</h2>
+      <div class="feat-grid">
+        <div class="feat">
+          <span class="k">QUOTES</span>
+          <h3>Quotes that chase themselves</h3>
+          <p>Send a proper quote in under a minute. PatchUp flags the ones that have gone quiet — and sends the nudge for you.</p>
+        </div>
+        <div class="feat">
+          <span class="k">INVOICES</span>
+          <h3>Invoiced the moment you finish</h3>
+          <p>Mark a job done and the invoice goes out on its own, as a PDF with your logo on it. Before and after photos attached if you took them.</p>
+        </div>
+        <div class="feat">
+          <span class="k">CHASING</span>
+          <h3>Overdue money, chased for you</h3>
+          <p>Late invoices get followed up automatically. Politely, in your own words, on a schedule you set.</p>
+        </div>
+        <div class="feat">
+          <span class="k">DIARY</span>
+          <h3>A diary that keeps itself</h3>
+          <p>Jobs, payment dates and reminders in one calendar. Book something in on the spot — or just say it out loud and let PatchUp fill in the details.</p>
+        </div>
+        <div class="feat">
+          <span class="k">REPEAT WORK</span>
+          <h3>Regulars book themselves</h3>
+          <p>Annual services, quarterly checks, routine maintenance. Set it up once and it puts itself back in the diary every time.</p>
+        </div>
+        <div class="feat">
+          <span class="k">TEAM</span>
+          <h3>Your lads, with the right access</h3>
+          <p>Assign jobs, share one between two people, and control exactly what each person can see — including whether they see prices.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <p class="eyebrow">Where you'll use it</p>
+      <h2>Made for the van, not the office</h2>
+      <div class="body-copy">
+        <p>PatchUp works on your phone first, because that's where you actually are. Quote from the customer's kitchen. Mark a job done from the driveway. Check what you're owed while the kettle boils.</p>
+        <p>Everything goes out under your business name, with your logo, in wording you can change to sound like you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <p class="eyebrow">Pricing</p>
+      <h2>One plan. Pay for who you've got.</h2>
+      <div class="body-copy" style="max-width:52ch">
+        <p>No tiers to pick between and nothing to outgrow. £19 a month covers you, and every extra person is £8.</p>
+      </div>
+      <div class="price-head">
+        <span class="big">£19</span>
+        <span class="plus">per month · then £8 a month for each extra person</span>
+      </div>
+
+      <div class="calc">
+        <div class="calc-top">
+          <p class="calc-label">How many of you are there?</p>
+          <div class="sizes" id="sizes" role="group" aria-label="Team size"></div>
+        </div>
+
+        <div class="calc-out">
+          <div class="out-main">
+            <div class="amount" id="outAmount">£19</div>
+            <div class="sub" id="outSub">per month · 1 person</div>
+          </div>
+          <div class="out-each">that's <strong id="outEach">£19.00</strong> each</div>
+        </div>
+
+        <div class="compare">
+          <div class="cmp-row us">
+            <div class="cmp-top"><span class="who">PatchUp</span><span class="val" id="cmpUsVal">£19</span></div>
+            <div class="cmp-track"><div class="cmp-fill" id="cmpUsBar" style="width:56%"></div></div>
+          </div>
+          <div class="cmp-row">
+            <div class="cmp-top"><span class="who">Software charging £34 per person</span><span class="val" id="cmpThemVal">£34</span></div>
+            <div class="cmp-track"><div class="cmp-fill" id="cmpThemBar" style="width:100%"></div></div>
+          </div>
+          <p class="cmp-note">Per-person pricing is the norm for trade software, and it's the thing people complain about most — the bill climbs every time you take someone on.</p>
+        </div>
+
+        <div class="calc-cta">
+          <a class="btn btn-primary" href="https://app.getpatchup.co.uk/signup">Start free trial</a>
+        </div>
+      </div>
+
+      <p class="price-foot">14-day free trial · no card to start · no setup fee · no contract · cancel from your settings</p>
+    </div>
+  </section>
+
+  <section class="band" id="faq">
+    <div class="wrap">
+      <p class="eyebrow">Questions</p>
+      <h2>The things people ask first</h2>
+      <div class="faq">
+        <details open>
+          <summary>Do I need to be technical to use it?</summary>
+          <p>No. If you can use WhatsApp, you can use PatchUp. Most people send their first quote within ten minutes of signing up.</p>
+        </details>
+        <details>
+          <summary>Which trades is it for?</summary>
+          <p>Any of them. Plumbing, electrical, heating, building, roofing, joinery, tiling, landscaping — the admin is the same regardless of what's in the back of the van.</p>
+        </details>
+        <details>
+          <summary>How do customers get quotes and invoices?</summary>
+          <p>By email, as a proper PDF with your business name and logo on it. Replies come straight back to your own email address, so the conversation stays with you.</p>
+        </details>
+        <details>
+          <summary>Can I change the wording of the automatic messages?</summary>
+          <p>Yes. Every automated message — quotes, invoices, reminders, chasers — can be reworded to sound like you rather than like software.</p>
+        </details>
+        <details>
+          <summary>What happens when someone doesn't pay?</summary>
+          <p>PatchUp chases them for you, on a schedule you set. Everything outstanding and everything overdue sits on one screen, so nothing quietly slips.</p>
+        </details>
+        <details>
+          <summary>What about my accountant?</summary>
+          <p>There's a full invoice history you can export whenever you need it.</p>
+        </details>
+        <details>
+          <summary>Can I cancel?</summary>
+          <p>Any time, from your settings. No contract, no notice period, no phone call.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="why">
+    <div class="wrap">
+      <p class="eyebrow">The name</p>
+      <h2>Why PatchUp?</h2>
+      <div class="body-copy">
+        <p>You patch things up for a living. A leak, a fuse, a cracked tile, a boiler that's given up on a Sunday. Someone's problem, sorted, and you're on to the next one.</p>
+        <p>The trouble is the admin never gets the same treatment. Quotes go unanswered, invoices sit unpaid, and the diary lives across three text messages and a scrap of paper.</p>
+        <p><strong>So we patch up the other end — the gap between finishing the job and actually getting paid for it.</strong></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="closer">
+    <div class="wrap">
+      <h2>Get the admin off your plate</h2>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://app.getpatchup.co.uk/signup">Start free trial</a>
+      </div>
+      <p class="trial-note">14 days free · no card needed</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span class="foot-copy">PatchUp — job management and invoicing for UK trades</span>
+    <div class="foot-links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="https://app.getpatchup.co.uk">Log in</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var SIZES = [1, 2, 3, 4, 5, 6, 8, 10, 15, 20];
+    var BASE = 19, EXTRA = 8, THEIRS = 34;
+    var wrap = document.getElementById('sizes');
+    if (!wrap) return;
+
+    function money(n) {
+      return '£' + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2));
+    }
+
+    function render(n) {
+      var ours = BASE + (n - 1) * EXTRA;
+      var theirs = n * THEIRS;
+      document.getElementById('outAmount').textContent = money(ours);
+      document.getElementById('outSub').textContent =
+        'per month · ' + n + (n === 1 ? ' person' : ' people');
+      document.getElementById('outEach').textContent = '£' + (ours / n).toFixed(2);
+      document.getElementById('cmpUsVal').textContent = money(ours);
+      document.getElementById('cmpThemVal').textContent = money(theirs);
+      document.getElementById('cmpUsBar').style.width = (ours / theirs * 100) + '%';
+      document.getElementById('cmpThemBar').style.width = '100%';
+      Array.prototype.forEach.call(wrap.children, function (b) {
+        b.setAttribute('aria-pressed', Number(b.dataset.n) === n ? 'true' : 'false');
+      });
+    }
+
+    SIZES.forEach(function (n) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'size';
+      b.dataset.n = n;
+      b.textContent = n;
+      b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () { render(n); });
+      wrap.appendChild(b);
+    });
+
+    render(1);
+  })();
+
+  (function () {
+    var btn = document.getElementById('menuBtn');
+    var menu = document.getElementById('mobileMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', function () {
+      var open = menu.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.textContent = open ? 'Close' : 'Menu';
+    });
+    menu.addEventListener('click', function (e) {
+      if (e.target.tagName === 'A') {
+        menu.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = 'Menu';
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
