@@ -163,8 +163,8 @@
   .seg-paid .t { font-weight: 500; color: var(--ink); }
 
   @media (max-width: 720px) {
-    .strip { gap: 7px; transform: skewX(var(--slant)) scale(0.8); }
-    .seg { padding: 20px 15px; min-width: 0; }
+    .strip { gap: 6px; min-width: 0; transform: skewX(var(--slant)) scale(0.86); padding: 0 14px; }
+    .seg { padding: 20px 10px; min-width: 0; flex: 1 1 0; }
     .seg .t { font-size: 18px; }
     .seg .n { font-size: 10px; }
     .strip-zone { margin-top: 44px; padding: 26px 0 56px; }
@@ -270,6 +270,19 @@
   .size:hover { border-color: var(--ink); }
   .size[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
+  .size-custom {
+    display: flex; align-items: center; gap: 10px; margin-top: 14px;
+    font-family: var(--mono); font-size: 12px; color: var(--mid); letter-spacing: 0.02em;
+  }
+  .size-custom input {
+    font-family: var(--mono); font-size: 14px; width: 72px; padding: 10px 10px;
+    border: 1px solid var(--line); border-radius: 2px; background: var(--paper);
+    color: var(--ink); text-align: center; -moz-appearance: textfield;
+  }
+  .size-custom input::-webkit-outer-spin-button,
+  .size-custom input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .size-custom input:focus { border-color: var(--ink); outline: none; }
+
   .calc-out { padding: 32px; display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-end; }
   .out-main .amount {
     font-family: var(--display); font-weight: 300; font-size: clamp(46px, 8vw, 68px);
@@ -302,7 +315,20 @@
   .calc-cta { padding: 0 32px 32px; }
   @media (max-width: 620px) {
     .calc-top, .calc-out, .compare, .calc-cta { padding-left: 20px; padding-right: 20px; }
-    .calc-out { gap: 22px; }
+    .size-custom {
+    display: flex; align-items: center; gap: 10px; margin-top: 14px;
+    font-family: var(--mono); font-size: 12px; color: var(--mid); letter-spacing: 0.02em;
+  }
+  .size-custom input {
+    font-family: var(--mono); font-size: 14px; width: 72px; padding: 10px 10px;
+    border: 1px solid var(--line); border-radius: 2px; background: var(--paper);
+    color: var(--ink); text-align: center; -moz-appearance: textfield;
+  }
+  .size-custom input::-webkit-outer-spin-button,
+  .size-custom input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .size-custom input:focus { border-color: var(--ink); outline: none; }
+
+  .calc-out { gap: 22px; }
     .size { min-width: 42px; font-size: 13px; padding: 10px 6px; }
   }
 
@@ -474,6 +500,10 @@
         <div class="calc-top">
           <p class="calc-label">How many of you are there?</p>
           <div class="sizes" id="sizes" role="group" aria-label="Team size"></div>
+          <div class="size-custom">
+            <label for="sizeInput">or enter a number</label>
+            <input type="number" id="sizeInput" min="1" max="500" step="1" inputmode="numeric" value="1">
+          </div>
         </div>
 
         <div class="calc-out">
@@ -490,10 +520,10 @@
             <div class="cmp-track"><div class="cmp-fill" id="cmpUsBar" style="width:56%"></div></div>
           </div>
           <div class="cmp-row">
-            <div class="cmp-top"><span class="who">Software charging £34 per person</span><span class="val" id="cmpThemVal">£34</span></div>
+            <div class="cmp-top"><span class="who">Competitor pricing</span><span class="val" id="cmpThemVal">£34</span></div>
             <div class="cmp-track"><div class="cmp-fill" id="cmpThemBar" style="width:100%"></div></div>
           </div>
-          <p class="cmp-note">Per-person pricing is the norm for trade software, and it's the thing people complain about most — the bill climbs every time you take someone on.</p>
+          <p class="cmp-note">Most trade software charges £30–£40 a month for every person on the team. Ours is £8. Same maths — very different bill.</p>
         </div>
 
         <div class="calc-cta">
@@ -605,6 +635,8 @@
       Array.prototype.forEach.call(wrap.children, function (b) {
         b.setAttribute('aria-pressed', Number(b.dataset.n) === n ? 'true' : 'false');
       });
+      var input = document.getElementById('sizeInput');
+      if (input && Number(input.value) !== n) input.value = n;
     }
 
     SIZES.forEach(function (n) {
@@ -617,6 +649,20 @@
       b.addEventListener('click', function () { render(n); });
       wrap.appendChild(b);
     });
+
+    var input = document.getElementById('sizeInput');
+    if (input) {
+      input.addEventListener('input', function () {
+        var n = parseInt(input.value, 10);
+        if (!n || n < 1) return;
+        if (n > 500) { n = 500; input.value = 500; }
+        render(n);
+      });
+      input.addEventListener('blur', function () {
+        var n = parseInt(input.value, 10);
+        if (!n || n < 1) { input.value = 1; render(1); }
+      });
+    }
 
     render(1);
   })();
